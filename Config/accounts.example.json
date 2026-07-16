@@ -1,0 +1,48 @@
+{
+  "accounts": [
+    {
+      "id": "example",
+      "name": "آلپاری - نمونه",
+      "trading_mode": "paper",
+      "metaapi_token": "",
+      "metaapi_account_id": "",
+      "risk_percent": 1.0,
+      "max_open_positions": 3,
+      "max_daily_loss_percent": 5.0,
+      "poll_interval_seconds": 60,
+      "enabled": true,
+      "symbols": [
+        {
+          "symbol": "EURUSD",
+          "timeframe": "1h",
+          "enabled": true,
+          "atr_period": 10,
+          "st_factor": 3.0,
+          "ema_fast": 50,
+          "ema_slow": 200,
+          "rsi_period": 14,
+          "rsi_buy_level": 55,
+          "rsi_sell_level": 45,
+          "sl_atr_mult": 2.0,
+          "tp_atr_mult": 4.0,
+          "pip_value_per_lot": null
+        },
+        {
+          "symbol": "GBPUSD",
+          "timeframe": "4h",
+          "enabled": true,
+          "atr_period": 10,
+          "st_factor": 3.0,
+          "ema_fast": 50,
+          "ema_slow": 200,
+          "rsi_period": 14,
+          "rsi_buy_level": 55,
+          "rsi_sell_level": 45,
+          "sl_atr_mult": 2.0,
+          "tp_atr_mult": 4.0,
+          "pip_value_per_lot": null
+        }
+      ]
+    }
+  ]
+}
