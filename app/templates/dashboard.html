@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>فارکس بات — داشبورد</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=vazirmatn:400,500,600,700|jetbrains-mono:400,500,700" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F14; --panel:#111820; --panel-2:#161f2a; --border:#212B38;
+    --text:#E7EDF3; --muted:#7C8798; --teal:#14C9B4; --amber:#F0A93E;
+    --buy:#2FBF71; --sell:#E5484D;
+    --mono:'JetBrains Mono',monospace; --sans:'Vazirmatn',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh;}
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 26px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, var(--panel), var(--bg)); position:sticky; top:0; z-index:5;
+  }
+  header h1{ font-size:17px; margin:0; }
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:13px; border:1px solid var(--border);
+    border-radius:8px; padding:8px 16px; cursor:pointer; background:var(--panel-2); color:var(--text);
+  }
+  .btn:hover{ border-color:var(--teal); }
+  .btn.primary{ background:var(--teal); color:#04211d; border-color:var(--teal); }
+  .btn.danger{ background:var(--sell); color:#2b0507; border-color:var(--sell); }
+  .btn.small{ padding:5px 11px; font-size:12px; }
+
+  main{ padding:22px 26px; display:flex; flex-direction:column; gap:20px; }
+
+  .account-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .account-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; background:var(--panel-2); flex-wrap:wrap; gap:10px;
+  }
+  .account-head .left{ display:flex; align-items:center; gap:12px; }
+  .pulse{ width:10px; height:10px; border-radius:50%; background:var(--muted); }
+  .pulse.live{ background:var(--teal); box-shadow:0 0 0 0 rgba(20,201,180,.6); animation:pulse 1.8s infinite; }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(20,201,180,.55);} 70%{box-shadow:0 0 0 9px rgba(20,201,180,0);} 100%{box-shadow:0 0 0 0 rgba(20,201,180,0);}
+  }
+  .account-name{ font-weight:700; font-size:15px; }
+  .badge{ font-family:var(--mono); font-size:11px; border:1px solid var(--border); border-radius:20px; padding:2px 9px; }
+  .badge.paper{ color:var(--amber); border-color:var(--amber); }
+  .badge.live{ color:var(--sell); border-color:var(--sell); }
+  .account-meta{ color:var(--muted); font-family:var(--mono); font-size:12px; }
+
+  .symbols-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; padding:16px 18px; }
+  .symbol-card{ background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:13px 15px; }
+  .symbol-card .sh{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .symbol-card .sym{ font-weight:700; font-family:var(--mono); font-size:14px; }
+  .sig{ font-family:var(--mono); font-weight:700; font-size:16px; }
+  .sig.buy{ color:var(--buy); } .sig.sell{ color:var(--sell); } .sig.none{ color:var(--muted); }
+  .kv{ display:flex; justify-content:space-between; font-size:12px; padding:3px 0; border-bottom:1px dashed var(--border); }
+  .kv:last-child{ border-bottom:none; }
+  .kv span:first-child{ color:var(--muted); }
+  .kv span:last-child{ font-family:var(--mono); }
+  .symbol-actions{ display:flex; gap:6px; margin-top:8px; }
+
+  .add-symbol-card{
+    border:1px dashed var(--border); border-radius:10px; display:flex; align-items:center;
+    justify-content:center; min-height:120px; cursor:pointer; color:var(--muted); font-size:13px;
+  }
+  .add-symbol-card:hover{ border-color:var(--teal); color:var(--teal); }
+
+  .log-box{
+    max-height:160px; overflow-y:auto; font-family:var(--mono); font-size:11.5px;
+    line-height:1.8; direction:ltr; text-align:left; padding:10px 18px; border-top:1px solid var(--border);
+  }
+  .log-error{ color:var(--sell); } .log-warning{ color:var(--amber); }
+  .log-success{ color:var(--buy); } .log-info,.log-debug{ color:var(--muted); }
+
+  .add-account-card{
+    border:1px dashed var(--border); border-radius:14px; display:flex; align-items:center;
+    justify-content:center; min-height:90px; cursor:pointer; color:var(--muted); font-weight:600;
+  }
+  .add-account-card:hover{ border-color:var(--teal); color:var(--teal); }
+
+  /* مودال */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); align-items:center;
+    justify-content:center; z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px;
+    width:min(480px, 92vw); max-height:88vh; overflow-y:auto;
+  }
+  .modal h2{ margin-top:0; font-size:16px; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; }
+  .field input, .field select{
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border);
+    background:var(--panel-2); color:var(--text); font-family:var(--mono); font-size:13px;
+  }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 فارکس بات — داشبورد</h1>
+  <div style="display:flex; gap:8px;">
+    <button class="btn primary" onclick="callApi('/api/start-all')">شروع همه</button>
+    <button class="btn danger" onclick="callApi('/api/stop-all')">توقف همه</button>
+  </div>
+</header>
+
+<main id="accountsRoot">
+  <!-- کارت‌های حساب اینجا توسط جاوااسکریپت ساخته می‌شوند -->
+</main>
+
+<div style="padding:0 26px 30px;">
+  <div class="add-account-card" onclick="openAccountModal()">+ افزودن حساب جدید</div>
+</div>
+
+<!-- مودال افزودن/ویرایش حساب -->
+<div class="overlay" id="accountModal">
+  <div class="modal">
+    <h2>افزودن حساب</h2>
+    <div class="field"><label>نام حساب</label><input id="acc_name" placeholder="مثلاً آلپاری - حساب اصلی"></div>
+    <div class="field-row">
+      <div class="field"><label>حالت</label>
+        <select id="acc_mode"><option value="paper">paper (آزمایشی)</option><option value="live">live (واقعی)</option></select>
+      </div>
+      <div class="field"><label>ریسک هر معامله (٪)</label><input id="acc_risk" type="number" value="1.0" step="0.1"></div>
+    </div>
+    <div class="field"><label>توکن MetaApi</label><input id="acc_token" placeholder="از app.metaapi.cloud"></div>
+    <div class="field"><label>شناسه حساب MetaApi (Account ID)</label><input id="acc_accid"></div>
+    <div class="field-row">
+      <div class="field"><label>سقف پوزیشن باز هم‌زمان (کل حساب)</label><input id="acc_maxpos" type="number" value="1"></div>
+      <div class="field"><label>سقف ضرر روزانه (٪)</label><input id="acc_maxloss" type="number" value="5"></div>
+    </div>
+    <div class="field"><label>فاصله بررسی سیگنال (ثانیه)</label><input id="acc_poll" type="number" value="60"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('accountModal')">انصراف</button>
+      <button class="btn primary" onclick="submitAccount()">ذخیره حساب</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال افزودن جفت‌ارز -->
+<div class="overlay" id="symbolModal">
+  <div class="modal">
+    <h2>افزودن جفت‌ارز</h2>
+    <input type="hidden" id="sym_account_id">
+    <div class="field-row">
+      <div class="field"><label>نماد</label><input id="sym_symbol" placeholder="EURUSD, GBPUSD, XAUUSD, ..."></div>
+      <div class="field"><label>تایم‌فریم</label>
+        <select id="sym_timeframe">
+          <option>1m</option><option>5m</option><option>15m</option><option>30m</option>
+          <option selected>1h</option><option>4h</option><option>1d</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>EMA سریع</label><input id="sym_emafast" type="number" value="50"></div>
+      <div class="field"><label>EMA کند</label><input id="sym_emaslow" type="number" value="200"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>دوره ATR</label><input id="sym_atr" type="number" value="10"></div>
+      <div class="field"><label>ضریب SuperTrend</label><input id="sym_stfactor" type="number" value="3.0" step="0.1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>ضریب SL (× ATR)</label><input id="sym_sl" type="number" value="2.0" step="0.1"></div>
+      <div class="field"><label>ضریب TP (× ATR)</label><input id="sym_tp" type="number" value="4.0" step="0.1"></div>
+    </div>
+    <div class="field">
+      <label>ارزش هر پیپ به ازای ۱ لات (اختیاری — برای کراس‌های بدون USD توصیه می‌شود)</label>
+      <input id="sym_pipvalue" type="number" step="0.01" placeholder="خالی = محاسبه خودکار">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('symbolModal')">انصراف</button>
+      <button class="btn primary" onclick="submitSymbol()">ذخیره جفت‌ارز</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let accountsCache = [];
+
+function openAccountModal(){ document.getElementById("accountModal").classList.add("open"); }
+function openSymbolModal(accountId){
+  document.getElementById("sym_account_id").value = accountId;
+  document.getElementById("symbolModal").classList.add("open");
+}
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+
+async function callApi(path, opts={}){
+  await fetch(path, {method:"POST", ...opts});
+  refresh();
+}
+
+async function submitAccount(){
+  const payload = {
+    name: document.getElementById("acc_name").value || "حساب بدون‌نام",
+    trading_mode: document.getElementById("acc_mode").value,
+    risk_percent: parseFloat(document.getElementById("acc_risk").value),
+    metaapi_token: document.getElementById("acc_token").value,
+    metaapi_account_id: document.getElementById("acc_accid").value,
+    max_open_positions: parseInt(document.getElementById("acc_maxpos").value),
+    max_daily_loss_percent: parseFloat(document.getElementById("acc_maxloss").value),
+    poll_interval_seconds: parseInt(document.getElementById("acc_poll").value),
+  };
+  await fetch("/api/accounts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)});
+  closeModal("accountModal");
+  refresh();
+}
+
+async function submitSymbol(){
+  const accId = document.getElementById("sym_account_id").value;
+  const payload = {
+    symbol: document.getElementById("sym_symbol").value.toUpperCase().trim(),
+    timeframe: document.getElementById("sym_timeframe").value,
+    ema_fast: parseInt(document.getElementById("sym_emafast").value),
+    ema_slow: parseInt(document.getElementById("sym_emaslow").value),
+    atr_period: parseInt(document.getElementById("sym_atr").value),
+    st_factor: parseFloat(document.getElementById("sym_stfactor").value),
+    sl_atr_mult: parseFloat(document.getElementById("sym_sl").value),
+    tp_atr_mult: parseFloat(document.getElementById("sym_tp").value),
+    pip_value_per_lot: document.getElementById("sym_pipvalue").value ? parseFloat(document.getElementById("sym_pipvalue").value) : null,
+  };
+  if(!payload.symbol){ alert("نام نماد را وارد کنید"); return; }
+  await fetch(`/api/accounts/${accId}/symbols`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)});
+  closeModal("symbolModal");
+  refresh();
+}
+
+async function removeSymbol(accId, symbol){
+  if(!confirm(`جفت‌ارز ${symbol} حذف شود؟`)) return;
+  await fetch(`/api/accounts/${accId}/symbols/${symbol}`, {method:"DELETE"});
+  refresh();
+}
+
+async function removeAccount(accId){
+  if(!confirm("این حساب به‌طور کامل حذف شود؟ این کار قابل بازگشت نیست.")) return;
+  await fetch(`/api/accounts/${accId}`, {method:"DELETE"});
+  refresh();
+}
+
+function fmt(n, d=5){ return (n === null || n === undefined) ? "—" : Number(n).toFixed(d); }
+
+async function refresh(){
+  try{
+    const [accRes, statusRes] = await Promise.all([fetch("/api/accounts"), fetch("/api/status")]);
+    accountsCache = await accRes.json();
+    const status = await statusRes.json();
+    render(accountsCache, status);
+  }catch(e){ console.error(e); }
+}
+
+function render(accounts, status){
+  const root = document.getElementById("accountsRoot");
+  if(!accounts.length){
+    root.innerHTML = `<div style="color:var(--muted); text-align:center; padding:40px;">هنوز حسابی اضافه نشده. از دکمه «افزودن حساب جدید» شروع کنید.</div>`;
+    return;
+  }
+
+  root.innerHTML = accounts.map(acc => {
+    const st = status[acc.id] || {running:false, account:{}, symbols:{}, logs:[]};
+    const symbolsHtml = (acc.symbols || []).map(s => {
+      const symState = st.symbols?.[s.symbol] || {};
+      const sig = symState.signal;
+      const label = !sig ? "—" : sig.signal === "buy" ? "خرید" : sig.signal === "sell" ? "فروش" : "خنثی";
+      const cls = !sig ? "none" : sig.signal;
+      return `
+        <div class="symbol-card">
+          <div class="sh">
+            <span class="sym">${s.symbol}</span>
+            <span class="sig ${cls}">${label}</span>
+          </div>
+          <div class="kv"><span>تایم‌فریم</span><span>${s.timeframe}</span></div>
+          <div class="kv"><span>قیمت</span><span>${sig ? fmt(sig.close) : "—"}</span></div>
+          <div class="kv"><span>RSI</span><span>${sig ? fmt(sig.rsi,1) : "—"}</span></div>
+          <div class="kv"><span>SL / TP</span><span>${sig && sig.stop_loss ? fmt(sig.stop_loss)+" / "+fmt(sig.take_profit) : "—"}</span></div>
+          <div class="kv"><span>پوزیشن باز</span><span>${(symState.positions||[]).length}</span></div>
+          <div class="symbol-actions">
+            <button class="btn small danger" onclick="removeSymbol('${acc.id}','${s.symbol}')">حذف</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="account-card">
+        <div class="account-head">
+          <div class="left">
+            <div class="pulse ${st.running ? 'live' : ''}"></div>
+            <div>
+              <div class="account-name">${acc.name}</div>
+              <div class="account-meta">
+                <span class="badge ${acc.trading_mode}">${acc.trading_mode === 'live' ? 'واقعی' : 'آزمایشی'}</span>
+                &nbsp;موجودی: $${fmt(st.account?.balance, 2)} &nbsp;|&nbsp; سرمایه: $${fmt(st.account?.equity, 2)}
+                ${st.error ? `&nbsp;|&nbsp; <span style="color:var(--sell)">خطا: ${st.error}</span>` : ""}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn small primary" onclick="callApi('/api/accounts/${acc.id}/start')">شروع</button>
+            <button class="btn small danger" onclick="callApi('/api/accounts/${acc.id}/stop')">توقف</button>
+            <button class="btn small" onclick="removeAccount('${acc.id}')">حذف حساب</button>
+          </div>
+        </div>
+        <div class="symbols-grid">
+          ${symbolsHtml}
+          <div class="add-symbol-card" onclick="openSymbolModal('${acc.id}')">+ افزودن جفت‌ارز</div>
+        </div>
+        <div class="log-box">
+          ${(st.logs||[]).map(l => `<div class="log-${l.level}">[${l.time}]${l.symbol ? ' ['+l.symbol+']' : ''} ${l.message}</div>`).join("")}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
