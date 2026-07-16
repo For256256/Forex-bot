@@ -1,0 +1,15 @@
+[Unit]
+Description=فارکس بات
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/opt/forex-bot
+EnvironmentFile=/opt/forex-bot/.env
+ExecStart=/opt/forex-bot/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8999
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
